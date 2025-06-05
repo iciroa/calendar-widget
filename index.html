@@ -4,24 +4,10 @@
   <meta charset="UTF-8">
   <title>시계</title>
 
-  <!-- ✅ PWA 설정 -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#000000">
-
-  <!-- ✅ 자동 새로고침: 4시간마다 (14400초) -->
+  <!-- 자동 새로고침: 4시간마다 -->
   <meta http-equiv="refresh" content="14400">
 
-  <!-- ✅ 아이콘 & 스플래시 이미지 (적절한 경로로 교체) -->
-  <link rel="apple-touch-icon" href="/icons/icon-192.png">
-  <link rel="manifest" href="/manifest.json">
-
-  <!-- ✅ 스플래시 이미지 (iPad 예시) -->
-  <link rel="apple-touch-startup-image"
-        media="(device-width: 768px) and (device-height: 1024px) and (orientation: portrait)"
-        href="/splash/splash-768x1024.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     html, body {
@@ -63,10 +49,14 @@
   <div id="milk"></div>
 
   <script>
+    function pad(num) {
+      return num.toString().padStart(2, '0');
+    }
+
     function updateDateTime() {
       const now = new Date();
 
-      // 날짜 포맷
+      // 날짜: "2025년 6월 6일 금요일"
       const dateStr = now.toLocaleDateString('ko-KR', {
         year: 'numeric',
         month: 'long',
@@ -74,12 +64,16 @@
         weekday: 'long'
       });
 
-      // 시간 포맷 (초 제외)
-      const timeStr = now.toLocaleTimeString('ko-KR', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      });
+      // 시, 분 직접 추출 후 AM/PM 변환
+      let hours = now.getHours();
+      const minutes = now.getMinutes();
+      const isAM = hours < 12;
+      const period = isAM ? '오전' : '오후';
+
+      hours = hours % 12;
+      if (hours === 0) hours = 12;
+
+      const timeStr = `${period} ${pad(hours)}:${pad(minutes)}`;
 
       document.getElementById('date').textContent = dateStr;
       document.getElementById('clock').textContent = timeStr;
@@ -89,7 +83,7 @@
     }
 
     updateDateTime();
-    setInterval(updateDateTime, 1000); // 매초 갱신
+    setInterval(updateDateTime, 1000); // 1초마다 갱신
   </script>
 </body>
 </html>
