@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<meta http-equiv="refresh" content="14400">
+<head>
+  <meta charset="UTF-8">
+  <title>시계 + 날씨 + 우유</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: black;
+      color: white;
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    #date {
+      font-size: 6vw;
+      font-weight: bold;
+      margin-bottom: 2vh;
+    }
+
+    #clock {
+      font-size: 12vw;
+      font-weight: bold;
+      margin-bottom: 3vh;
+    }
+
+    #weather-widget-container {
+      margin-bottom: 3vh;
+      zoom: 1.2; /* 필요 시 확대 조정 */
+    }
+
+    #milk {
+      font-size: 6vw;
+      font-weight: bold;
+      color: #00ffcc;
+    }
+
+    a {
+      display: none; /* 위젯의 "More forecasts" 링크 숨김 */
+    }
+  </style>
+</head>
+<body>
+  <div id="date">날짜 불러오는 중...</div>
+  <div id="clock">시계 불러오는 중...</div>
+
+  <!-- 날씨 위젯 삽입 위치 -->
+<div id="ww_30b18775a6e06" v='1.3' loc='id' a='{"t":"horizontal","lang":"ko","sl_lpl":1,"ids":["wl7420"],"font":"Arial","sl_ics":"one_a","sl_sot":"celsius","cl_bkg":"#000000","cl_font":"#FFFFFF","cl_cloud":"#FFFFFF","cl_persp":"#81D4FA","cl_sun":"#FFC107","cl_moon":"#FFC107","cl_thund":"#FF5722","el_nme":3,"el_phw":3}'>More forecasts: <a href="https://oneweather.org/seoul/30_days/" id="ww_30b18775a6e06_u" target="_blank">oneweather.org</a></div><script async src="https://app3.weatherwidget.org/js/?id=ww_30b18775a6e06"></script>
+  <!-- 월/수에 우유 표시 -->
+  <div id="milk"></div>
+
+  <script>
+    function updateDateTime() {
+      const now = new Date();
+      const dateOptions = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+      const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+
+      document.getElementById('date').textContent = now.toLocaleDateString('ko-KR', dateOptions);
+      document.getElementById('clock').textContent = now.toLocaleTimeString('ko-KR', timeOptions);
+
+      const day = now.getDay(); // 0: 일, 1: 월, ..., 6: 토
+      const milkEl = document.getElementById('milk');
+      milkEl.textContent = (day === 1 || day === 3) ? "우유" : "";
+    }
+
+
+    // 초기 실행
+    updateDateTime();
+    setInterval(updateDateTime, 1000); // 매초 시계 갱신
+
+  </script>
+</body>
+</html>
