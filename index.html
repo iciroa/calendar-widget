@@ -50,40 +50,41 @@
 
   <script>
     function pad(num) {
-      return num.toString().padStart(2, '0');
+      return (num < 10 ? '0' : '') + num;
+    }
+
+    function getKoreanDateString(date) {
+      var days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+      return date.getFullYear() + '년 ' +
+             (date.getMonth() + 1) + '월 ' +
+             date.getDate() + '일 ' +
+             days[date.getDay()];
     }
 
     function updateDateTime() {
-      const now = new Date();
+      var now = new Date();
 
-      // 날짜: "2025년 6월 6일 금요일"
-      const dateStr = now.toLocaleDateString('ko-KR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        weekday: 'long'
-      });
+      var dateStr = getKoreanDateString(now);
 
-      // 시, 분 직접 추출 후 AM/PM 변환
-      let hours = now.getHours();
-      const minutes = now.getMinutes();
-      const isAM = hours < 12;
-      const period = isAM ? '오전' : '오후';
+      var hours = now.getHours();
+      var minutes = now.getMinutes();
+      var isAM = hours < 12;
+      var period = isAM ? '오전' : '오후';
 
       hours = hours % 12;
       if (hours === 0) hours = 12;
 
-      const timeStr = `${period} ${pad(hours)}:${pad(minutes)}`;
+      var timeStr = period + ' ' + pad(hours) + ':' + pad(minutes);
 
-      document.getElementById('date').textContent = dateStr;
-      document.getElementById('clock').textContent = timeStr;
+      document.getElementById('date').innerHTML = dateStr;
+      document.getElementById('clock').innerHTML = timeStr;
 
-      const day = now.getDay(); // 1 = 월요일, 3 = 수요일
-      document.getElementById('milk').textContent = (day === 1 || day === 3) ? "우유" : "";
+      var day = now.getDay(); // 1 = 월요일, 3 = 수요일
+      document.getElementById('milk').innerHTML = (day === 1 || day === 3) ? "우유" : "";
     }
 
     updateDateTime();
-    setInterval(updateDateTime, 1000); // 1초마다 갱신
+    setInterval(updateDateTime, 1000);
   </script>
 </body>
 </html>
