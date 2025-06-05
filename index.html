@@ -2,7 +2,27 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>시계 + 날씨 + 우유</title>
+  <title>시계</title>
+
+  <!-- ✅ PWA 설정 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#000000">
+
+  <!-- ✅ 자동 새로고침: 4시간마다 (14400초) -->
+  <meta http-equiv="refresh" content="14400">
+
+  <!-- ✅ 아이콘 & 스플래시 이미지 (적절한 경로로 교체) -->
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- ✅ 스플래시 이미지 (iPad 예시) -->
+  <link rel="apple-touch-startup-image"
+        media="(device-width: 768px) and (device-height: 1024px) and (orientation: portrait)"
+        href="/splash/splash-768x1024.png">
+
   <style>
     html, body {
       margin: 0;
@@ -27,12 +47,7 @@
     #clock {
       font-size: 12vw;
       font-weight: bold;
-      margin-bottom: 3vh;
-    }
-
-    #weather-widget-container {
-      margin-bottom: 3vh;
-      zoom: 1.2;
+      margin-bottom: 2vh;
     }
 
     #milk {
@@ -40,25 +55,18 @@
       font-weight: bold;
       color: #00ffcc;
     }
-
-    a {
-      display: none;
-    }
   </style>
 </head>
 <body>
   <div id="date">날짜 불러오는 중...</div>
   <div id="clock">시계 불러오는 중...</div>
-
-  <div id="ww_30b18775a6e06" v='1.3' loc='id' a='{"t":"horizontal","lang":"ko","sl_lpl":1,"ids":["wl7420"],"font":"Arial","sl_ics":"one_a","sl_sot":"celsius","cl_bkg":"#000000","cl_font":"#FFFFFF","cl_cloud":"#FFFFFF","cl_persp":"#81D4FA","cl_sun":"#FFC107","cl_moon":"#FFC107","cl_thund":"#FF5722","el_nme":3,"el_phw":3}'>More forecasts: <a href="https://oneweather.org/seoul/30_days/" id="ww_30b18775a6e06_u" target="_blank">oneweather.org</a></div><script async src="https://app3.weatherwidget.org/js/?id=ww_30b18775a6e06"></script>
-
   <div id="milk"></div>
 
   <script>
     function updateDateTime() {
       const now = new Date();
 
-      // 날짜 포맷: 2025년 6월 6일 금요일
+      // 날짜 포맷
       const dateStr = now.toLocaleDateString('ko-KR', {
         year: 'numeric',
         month: 'long',
@@ -66,23 +74,22 @@
         weekday: 'long'
       });
 
-      // 시간 포맷: 오전 01:20:01
+      // 시간 포맷 (초 제외)
       const timeStr = now.toLocaleTimeString('ko-KR', {
         hour: '2-digit',
         minute: '2-digit',
-        second: '2-digit',
         hour12: true
       });
 
       document.getElementById('date').textContent = dateStr;
       document.getElementById('clock').textContent = timeStr;
 
-      const day = now.getDay(); // 1: 월, 3: 수
+      const day = now.getDay(); // 1 = 월요일, 3 = 수요일
       document.getElementById('milk').textContent = (day === 1 || day === 3) ? "우유" : "";
     }
-    updateDateTime();
-    setInterval(updateDateTime, 1000);
 
+    updateDateTime();
+    setInterval(updateDateTime, 1000); // 매초 갱신
   </script>
 </body>
 </html>
