@@ -24,29 +24,37 @@
       text-align: center;
     }
 
+    .row {
+      display: flex;
+      flex-direction: row;
+      align-items: baseline;
+      justify-content: center;
+      gap: 1vw;
+    }
+
     #date {
-      font-size: 9vw;
-      font-weight: bold;
-      margin-bottom: 1vh;
+      font-size: 5vw;
+      font-weight: normal;
     }
 
     #clock {
       font-size: 18vw;
       font-weight: bold;
-      margin-bottom: 2vh;
     }
 
     #milk {
       font-size: 9vw;
       font-weight: bold;
       color: #00ffcc;
+      margin-top: 3vh;
     }
   </style>
 </head>
 <body>
-  <div id="date">날짜 불러오는 중...</div>
-  <div id="clock">시계 불러오는 중...</div>
-  <div id="ww_30b18775a6e06" v='1.3' loc='id' a='{"t":"horizontal","lang":"ko","sl_lpl":1,"ids":["wl7420"],"font":"Arial","sl_ics":"one_a","sl_sot":"celsius","cl_bkg":"#000000","cl_font":"#FFFFFF","cl_cloud":"#FFFFFF","cl_persp":"#81D4FA","cl_sun":"#FFC107","cl_moon":"#FFC107","cl_thund":"#FF5722","el_nme":3,"el_phw":3}'>More forecasts: <a href="https://oneweather.org/seoul/30_days/" id="ww_30b18775a6e06_u" target="_blank">oneweather.org</a></div><script async src="https://app3.weatherwidget.org/js/?id=ww_30b18775a6e06"></script>
+  <div class="row">
+    <div id="date">날짜 불러오는 중...</div>
+    <div id="clock">시계 불러오는 중...</div>
+  </div>
   <div id="milk"></div>
 
   <script>
@@ -55,11 +63,10 @@
     }
 
     function getKoreanDateString(date) {
-      var days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
-      return date.getFullYear() + '년 ' +
-             (date.getMonth() + 1) + '월 ' +
-             date.getDate() + '일 ' +
-             days[date.getDay()];
+      var days = ['일', '월', '화', '수', '목', '금', '토'];
+      return (date.getMonth() + 1) + '월 ' +
+             date.getDate() + '일 (' +
+             days[date.getDay()] + ')';
     }
 
     function updateDateTime() {
@@ -69,13 +76,12 @@
 
       var hours = now.getHours();
       var minutes = now.getMinutes();
-      var isAM = hours < 12;
-      var period = isAM ? '오전' : '오후';
 
+      // 12시간제 변환, 0시는 12로
       hours = hours % 12;
       if (hours === 0) hours = 12;
 
-      var timeStr = period + ' ' + pad(hours) + ':' + pad(minutes);
+      var timeStr = pad(hours) + ':' + pad(minutes);
 
       document.getElementById('date').innerHTML = dateStr;
       document.getElementById('clock').innerHTML = timeStr;
