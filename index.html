@@ -23,30 +23,30 @@ html, body {
 }
 .panel {
   position:absolute;
-  inset:0;
+  top:0; left:0; right:0; bottom:0;
   display:flex;
   align-items:center;
   justify-content:center;
   flex-direction:column;
-  transition:opacity .8s ease, transform .8s ease;
   opacity:0;
-  transform:scale(.98);
+  transform:scale(0.98);
   pointer-events:none;
   text-align:center;
+  transition: opacity 0.8s ease, transform 0.8s ease;
 }
 .panel.active {
   opacity:1;
   transform:scale(1);
   pointer-events:auto;
 }
-#panel-1 { font-size:10vw; font-weight:700; }
-#panel-2 { font-size:8vw; font-weight:700; }
-.date-line { font-size:6vw; font-weight:600; }
-.weekday { font-size:5vw; font-weight:500; margin-top:2vw; }
-.extra { font-size:4vw; font-weight:400; margin-top:1vw; color:#ffcc66; }
-#panel-3 { font-size:5vw; }
-.weather-icon { font-size:12vw; margin-bottom:2vw; }
-.weather { font-size:5vw; line-height:1.4; white-space:pre-line; }
+#panel-1 { font-size:80px; font-weight:700; }
+#panel-2 { font-size:60px; font-weight:700; }
+.date-line { font-size:50px; font-weight:600; }
+.weekday { font-size:40px; font-weight:500; margin-top:10px; }
+.extra { font-size:30px; font-weight:400; margin-top:5px; color:#ffcc66; }
+#panel-3 { font-size:40px; }
+.weather-icon { font-size:80px; margin-bottom:10px; }
+.weather { font-size:40px; line-height:1.4; }
 </style>
 </head>
 <body>
@@ -65,70 +65,99 @@ html, body {
 
 <script>
 (function(){
-  const panels=[document.getElementById('panel-1'),document.getElementById('panel-2'),document.getElementById('panel-3')];
-  let current=0;
-  const INTERVAL_MS=20000;
-  let timer=null;
-  function show(i){ panels.forEach((p,idx)=>{ p.classList.toggle('active',idx===i); p.setAttribute('aria-hidden',String(idx!==i)); }); current=i; }
+  var panels = [document.getElementById('panel-1'), document.getElementById('panel-2'), document.getElementById('panel-3')];
+  var current = 0;
+  var INTERVAL_MS = 20000;
+  var timer = null;
+
+  function show(i){
+    for(var idx=0; idx<panels.length; idx++){
+      if(idx===i){ panels[idx].classList.add('active'); panels[idx].setAttribute('aria-hidden','false'); }
+      else{ panels[idx].classList.remove('active'); panels[idx].setAttribute('aria-hidden','true'); }
+    }
+    current = i;
+  }
   function next(){ show((current+1)%panels.length); }
-  function startTimer(){ stopTimer(); timer=setInterval(next,INTERVAL_MS); }
+  function startTimer(){ stopTimer(); timer = setInterval(next, INTERVAL_MS); }
   function stopTimer(){ if(timer){ clearInterval(timer); timer=null; } }
-  const wrap=document.getElementById('wrap');
-  wrap.addEventListener('click',next);
-  wrap.addEventListener('touchstart',next,{passive:true});
+
+  var wrap = document.getElementById('wrap');
+  wrap.addEventListener('click', next);
+  wrap.addEventListener('touchstart', next, {passive:true});
   show(0); startTimer();
-  document.addEventListener('visibilitychange',()=>{ if(document.hidden) stopTimer(); else startTimer(); });
+  document.addEventListener('visibilitychange', function(){ if(document.hidden) stopTimer(); else startTimer(); });
 
   // 시간/날짜
-  const clockEl=document.getElementById('clockDisplay');
-  const dateEl=document.getElementById('dateDisplay');
-  const weekdayEl=document.getElementById('weekdayDisplay');
-  const extraEl=document.getElementById('extraDisplay');
-  function pad(n){ return n<10?'0'+n:n; }
-  const weekdays=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+  var clockEl = document.getElementById('clockDisplay');
+  var dateEl = document.getElementById('dateDisplay');
+  var weekdayEl = document.getElementById('weekdayDisplay');
+  var extraEl = document.getElementById('extraDisplay');
+
+  function pad(n){ return n<10 ? '0'+n : n; }
+  var weekdays=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
   function updateClock(){
-    const now=new Date();
-    let hh=now.getHours(); const mm=pad(now.getMinutes()); const ampm=hh>=12?'PM':'AM'; hh=hh%12; if(hh===0) hh=12;
-    clockEl.textContent=`${hh}:${mm} ${ampm}`;
-    const month=pad(now.getMonth()+1),day=pad(now.getDate());
-    dateEl.textContent=`${month}/${day}`;
-    const weekday=weekdays[now.getDay()];
-    weekdayEl.textContent=weekday;
-    extraEl.textContent=(weekday==='월요일'||weekday==='수요일')?'우유':'';
+    var now = new Date();
+    var hh = now.getHours();
+    var mm = pad(now.getMinutes());
+    var ampm = hh>=12 ? 'PM' : 'AM';
+    hh = hh%12; if(hh===0) hh=12;
+    clockEl.textContent = hh+':'+mm+' '+ampm;
+    var month = pad(now.getMonth()+1);
+    var day = pad(now.getDate());
+    dateEl.textContent = month+'/'+day;
+    var weekday = weekdays[now.getDay()];
+    weekdayEl.textContent = weekday;
+    extraEl.textContent = (weekday==='월요일'||weekday==='수요일') ? '우유' : '';
   }
   updateClock();
   setInterval(updateClock,1000);
 
   // 날씨
-  const weatherEl=document.getElementById('weatherDisplay');
-  const iconEl=document.getElementById('weatherIcon');
-  const WEATHER_INTERVAL_MS=4*60*60*1000;
-  let lastWeather=null;
-  let lastWeatherTime=0;
-  const weatherCodes={0:'☀️맑음',1:'🌤구름 조금',2:'⛅️구름 많음',3:'☁️흐림',45:'🌫안개',48:'🌫안개',51:'🌦이슬비',53:'🌦이슬비',55:'🌦이슬비',56:'🌧얼음비',57:'🌧얼음비',61:'🌧비',63:'🌧비',65:'🌧비',66:'❄️진눈깨비',67:'❄️진눈깨비',71:'❄️눈',73:'❄️눈',75:'❄️눈',77:'❄️눈',80:'🌧소나기',81:'🌧소나기',82:'🌧소나기',85:'❄️눈',86:'❄️눈',95:'⛈천둥번개',96:'⛈천둥번개',99:'⛈천둥번개'};
+  var weatherEl = document.getElementById('weatherDisplay');
+  var iconEl = document.getElementById('weatherIcon');
+  var WEATHER_INTERVAL_MS = 4*60*60*1000;
+  var lastWeather = null;
+  var lastWeatherTime = 0;
+  var weatherCodes = {0:'☀️맑음',1:'🌤구름 조금',2:'⛅️구름 많음',3:'☁️흐림',45:'🌫안개',48:'🌫안개',51:'🌦이슬비',53:'🌦이슬비',55:'🌦이슬비',56:'🌧얼음비',57:'🌧얼음비',61:'🌧비',63:'🌧비',65:'🌧비',66:'❄️진눈깨비',67:'❄️진눈깨비',71:'❄️눈',73:'❄️눈',75:'❄️눈',77:'❄️눈',80:'🌧소나기',81:'🌧소나기',82:'🌧소나기',85:'❄️눈',86:'❄️눈',95:'⛈천둥번개',96:'⛈천둥번개',99:'⛈천둥번개'};
 
-  async function fetchWeather(){
-    const now=Date.now();
+  function fetchWeather(){
+    var now = Date.now();
     if(lastWeather && now - lastWeatherTime < WEATHER_INTERVAL_MS){
       updateWeatherDisplay(lastWeather);
       return;
     }
     try{
-      const d=new Date();
+      var d = new Date();
       if(d.getHours()>=17) d.setDate(d.getDate()+1);
-      const year=d.getFullYear(),month=d.getMonth()+1,day=d.getDate();
-      const url=`https://api.open-meteo.com/v1/forecast?latitude=36.7833&longitude=127.0&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia/Seoul`;
-      const res=await fetch(url);
-      const data=await res.json();
-      let index=data.daily.time.findIndex(t=>t===`${year}-${pad(month)}-${pad(day)}`);
-      if(index===-1) index=0;
-      lastWeather={
-        weathercode:data.daily.weathercode[index],
-        tempMax:data.daily.temperature_2m_max[index],
-        tempMin:data.daily.temperature_2m_min[index]
+      var year=d.getFullYear(), month=d.getMonth()+1, day=d.getDate();
+      var url='https://api.open-meteo.com/v1/forecast?latitude=36.7833&longitude=127.0&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia/Seoul';
+
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', url, true);
+      xhr.onreadystatechange = function(){
+        if(xhr.readyState===4 && xhr.status===200){
+          try{
+            var data = JSON.parse(xhr.responseText);
+            var index = -1;
+            for(var i=0;i<data.daily.time.length;i++){
+              if(data.daily.time[i]===year+'-'+pad(month)+'-'+pad(day)){ index=i; break; }
+            }
+            if(index===-1) index=0;
+            lastWeather={
+              weathercode: data.daily.weathercode[index],
+              tempMax: data.daily.temperature_2m_max[index],
+              tempMin: data.daily.temperature_2m_min[index]
+            };
+            lastWeatherTime = now;
+            updateWeatherDisplay(lastWeather);
+          }catch(e){
+            weatherEl.textContent='날씨 정보를 가져올 수 없습니다.';
+            iconEl.textContent='❓';
+            console.error(e);
+          }
+        }
       };
-      lastWeatherTime=now;
-      updateWeatherDisplay(lastWeather);
+      xhr.send();
     }catch(e){
       weatherEl.textContent='날씨 정보를 가져올 수 없습니다.';
       iconEl.textContent='❓';
@@ -137,11 +166,10 @@ html, body {
   }
 
   function updateWeatherDisplay(obj){
-    const code=obj.weathercode;
-    const iconText=weatherCodes[code]||'❓';
-    iconEl.textContent=iconText.slice(0,2);
-    // 줄바꿈 적용
-    weatherEl.innerHTML=`${iconText.slice(2)}<br>최고: ${obj.tempMax}°C<br>최저: ${obj.tempMin}°C`;
+    var code = obj.weathercode;
+    var iconText = weatherCodes[code] || '❓';
+    iconEl.textContent = iconText.substr(0,2);
+    weatherEl.innerHTML = iconText.substr(2)+'<br>최고: '+obj.tempMax+'°C<br>최저: '+obj.tempMin+'°C';
   }
 
   fetchWeather();
