@@ -1,97 +1,151 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>시계</title>
-
-  <!-- 자동 새로고침: 4시간마다 -->
-  <meta http-equiv="refresh" content="14400">
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background-color: black;
-      color: white;
-      font-family: 'Arial', sans-serif;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-    }
-
-    .row {
-      display: flex;
-      flex-direction: row;
-      align-items: baseline;
-      justify-content: center;
-      gap: 1vw;
-    }
-
-    #date {
-      font-size: 5vw;
-      font-weight: normal;
-    }
-
-    #clock {
-      font-size: 18vw;
-      font-weight: bold;
-    }
-
-    #milk {
-      font-size: 9vw;
-      font-weight: bold;
-      color: #00ffcc;
-      margin-top: 3vh;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>아이패드 미니 시간/날짜/날씨</title>
+<style>
+html, body {
+  height:100%;
+  margin:0;
+  background:#0b0f14;
+  color:#fff;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR","Apple SD Gothic Neo",sans-serif;
+  user-select:none;
+}
+.wrap {
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  overflow:hidden;
+}
+.panel {
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  transition:opacity .8s ease, transform .8s ease;
+  opacity:0;
+  transform:scale(.98);
+  pointer-events:none;
+  text-align:center;
+}
+.panel.active {
+  opacity:1;
+  transform:scale(1);
+  pointer-events:auto;
+}
+#panel-1 { font-size:10vw; font-weight:700; }
+#panel-2 { font-size:8vw; font-weight:700; }
+.date-line { font-size:6vw; font-weight:600; }
+.weekday { font-size:5vw; font-weight:500; margin-top:2vw; }
+.extra { font-size:4vw; font-weight:400; margin-top:1vw; color:#ffcc66; }
+#panel-3 { font-size:5vw; }
+.weather-icon { font-size:12vw; margin-bottom:2vw; }
+.weather { font-size:5vw; line-height:1.4; white-space:pre-line; }
+</style>
 </head>
 <body>
-  <div class="row">
-    <div id="date">날짜 불러오는 중...</div>
-    <div id="clock">시계 불러오는 중...</div>
+<div class="wrap" id="wrap">
+  <div class="panel active" id="panel-1"><div id="clockDisplay">00:00</div></div>
+  <div class="panel" id="panel-2">
+    <div class="date-line" id="dateDisplay">10/03</div>
+    <div class="weekday" id="weekdayDisplay">금요일</div>
+    <div class="extra" id="extraDisplay"></div>
   </div>
-  <div id="milk"></div>
+  <div class="panel" id="panel-3">
+    <div class="weather-icon" id="weatherIcon">☀️</div>
+    <div class="weather" id="weatherDisplay">날씨 정보를 불러오는 중...</div>
+  </div>
+</div>
 
-  <script>
-    function pad(num) {
-      return (num < 10 ? '0' : '') + num;
+<script>
+(function(){
+  const panels=[document.getElementById('panel-1'),document.getElementById('panel-2'),document.getElementById('panel-3')];
+  let current=0;
+  const INTERVAL_MS=20000;
+  let timer=null;
+  function show(i){ panels.forEach((p,idx)=>{ p.classList.toggle('active',idx===i); p.setAttribute('aria-hidden',String(idx!==i)); }); current=i; }
+  function next(){ show((current+1)%panels.length); }
+  function startTimer(){ stopTimer(); timer=setInterval(next,INTERVAL_MS); }
+  function stopTimer(){ if(timer){ clearInterval(timer); timer=null; } }
+  const wrap=document.getElementById('wrap');
+  wrap.addEventListener('click',next);
+  wrap.addEventListener('touchstart',next,{passive:true});
+  show(0); startTimer();
+  document.addEventListener('visibilitychange',()=>{ if(document.hidden) stopTimer(); else startTimer(); });
+
+  // 시간/날짜
+  const clockEl=document.getElementById('clockDisplay');
+  const dateEl=document.getElementById('dateDisplay');
+  const weekdayEl=document.getElementById('weekdayDisplay');
+  const extraEl=document.getElementById('extraDisplay');
+  function pad(n){ return n<10?'0'+n:n; }
+  const weekdays=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+  function updateClock(){
+    const now=new Date();
+    let hh=now.getHours(); const mm=pad(now.getMinutes()); const ampm=hh>=12?'PM':'AM'; hh=hh%12; if(hh===0) hh=12;
+    clockEl.textContent=`${hh}:${mm} ${ampm}`;
+    const month=pad(now.getMonth()+1),day=pad(now.getDate());
+    dateEl.textContent=`${month}/${day}`;
+    const weekday=weekdays[now.getDay()];
+    weekdayEl.textContent=weekday;
+    extraEl.textContent=(weekday==='월요일'||weekday==='수요일')?'우유':'';
+  }
+  updateClock();
+  setInterval(updateClock,1000);
+
+  // 날씨
+  const weatherEl=document.getElementById('weatherDisplay');
+  const iconEl=document.getElementById('weatherIcon');
+  const WEATHER_INTERVAL_MS=4*60*60*1000;
+  let lastWeather=null;
+  let lastWeatherTime=0;
+  const weatherCodes={0:'☀️맑음',1:'🌤구름 조금',2:'⛅️구름 많음',3:'☁️흐림',45:'🌫안개',48:'🌫안개',51:'🌦이슬비',53:'🌦이슬비',55:'🌦이슬비',56:'🌧얼음비',57:'🌧얼음비',61:'🌧비',63:'🌧비',65:'🌧비',66:'❄️진눈깨비',67:'❄️진눈깨비',71:'❄️눈',73:'❄️눈',75:'❄️눈',77:'❄️눈',80:'🌧소나기',81:'🌧소나기',82:'🌧소나기',85:'❄️눈',86:'❄️눈',95:'⛈천둥번개',96:'⛈천둥번개',99:'⛈천둥번개'};
+
+  async function fetchWeather(){
+    const now=Date.now();
+    if(lastWeather && now - lastWeatherTime < WEATHER_INTERVAL_MS){
+      updateWeatherDisplay(lastWeather);
+      return;
     }
-
-    function getKoreanDateString(date) {
-      var days = ['일', '월', '화', '수', '목', '금', '토'];
-      return (date.getMonth() + 1) + '월 ' +
-             date.getDate() + '일 (' +
-             days[date.getDay()] + ')';
+    try{
+      const d=new Date();
+      if(d.getHours()>=17) d.setDate(d.getDate()+1);
+      const year=d.getFullYear(),month=d.getMonth()+1,day=d.getDate();
+      const url=`https://api.open-meteo.com/v1/forecast?latitude=36.7833&longitude=127.0&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia/Seoul`;
+      const res=await fetch(url);
+      const data=await res.json();
+      let index=data.daily.time.findIndex(t=>t===`${year}-${pad(month)}-${pad(day)}`);
+      if(index===-1) index=0;
+      lastWeather={
+        weathercode:data.daily.weathercode[index],
+        tempMax:data.daily.temperature_2m_max[index],
+        tempMin:data.daily.temperature_2m_min[index]
+      };
+      lastWeatherTime=now;
+      updateWeatherDisplay(lastWeather);
+    }catch(e){
+      weatherEl.textContent='날씨 정보를 가져올 수 없습니다.';
+      iconEl.textContent='❓';
+      console.error(e);
     }
+  }
 
-    function updateDateTime() {
-      var now = new Date();
+  function updateWeatherDisplay(obj){
+    const code=obj.weathercode;
+    const iconText=weatherCodes[code]||'❓';
+    iconEl.textContent=iconText.slice(0,2);
+    // 줄바꿈 적용
+    weatherEl.innerHTML=`${iconText.slice(2)}<br>최고: ${obj.tempMax}°C<br>최저: ${obj.tempMin}°C`;
+  }
 
-      var dateStr = getKoreanDateString(now);
-
-      var hours = now.getHours();
-      var minutes = now.getMinutes();
-
-      // 12시간제 변환, 0시는 12로
-      hours = hours % 12;
-      if (hours === 0) hours = 12;
-
-      var timeStr = pad(hours) + ':' + pad(minutes);
-
-      document.getElementById('date').innerHTML = dateStr;
-      document.getElementById('clock').innerHTML = timeStr;
-
-      var day = now.getDay(); // 1 = 월요일, 3 = 수요일
-      document.getElementById('milk').innerHTML = (day === 1 || day === 3) ? "우유" : "";
-    }
-
-    updateDateTime();
-    setInterval(updateDateTime, 1000);
-  </script>
+  fetchWeather();
+})();
+</script>
 </body>
 </html>
