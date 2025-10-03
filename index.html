@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>아이패드 미니 시간/날짜/날씨</title>
+<title>시간/날짜/우유</title>
 <style>
 html, body {
   height:100%;
@@ -12,157 +12,69 @@ html, body {
   color:#fff;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR","Apple SD Gothic Neo",sans-serif;
   user-select:none;
-}
-.wrap {
-  height:100%;
   display:flex;
   align-items:center;
   justify-content:center;
-  position:relative;
-  overflow:hidden;
-}
-.panel {
-  position:absolute;
-  top:0; left:0; right:0; bottom:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-  opacity:0;
-  transform:scale(0.98);
-  pointer-events:none;
   text-align:center;
-  transition: opacity 0.8s ease, transform 0.8s ease;
 }
-.panel.active {
-  opacity:1;
-  transform:scale(1);
-  pointer-events:auto;
+#display {
+  width:100%;
+  padding:0 20px;
+  line-height:1.2;
 }
-#panel-1 { font-size:150px; font-weight:700; }
-#panel-2 { font-size:120px; font-weight:700; }
-.date-line { font-size:120px; font-weight:600; }
-.weekday { font-size:100px; font-weight:500; margin-top:10px; }
-.extra { font-size:80px; font-weight:400; margin-top:5px; color:#ffcc66; }
-#panel-3 { font-size:100px; line-height:1.4; }
-.weather { font-size:100px; }
+.date {
+  font-size:12vw; /* 화면 가로 기준 비율 */
+  font-weight:700;
+}
+.milk {
+  color:#00ccff;
+  font-size:10vw;
+  display:block;
+  margin-top:0.5em;
+}
+.time {
+  font-size:10vw;
+  margin-top:0.5em;
+  font-weight:600;
+}
 </style>
 </head>
 <body>
-<div class="wrap" id="wrap">
-  <div class="panel active" id="panel-1"><div id="clockDisplay">00:00</div></div>
-  <div class="panel" id="panel-2">
-    <div class="date-line" id="dateDisplay">10/03</div>
-    <div class="weekday" id="weekdayDisplay">금요일</div>
-    <div class="extra" id="extraDisplay"></div>
-  </div>
-  <div class="panel" id="panel-3">
-    <div class="weather" id="weatherDisplay">날씨 정보를 불러오는 중...</div>
-  </div>
+<div id="display">
+  <div class="date" id="date">1월1일(월)</div>
+  <div class="milk" id="milk"></div>
+  <div class="time" id="time">오전12:00</div>
 </div>
 
 <script>
 (function(){
-  var panels = [document.getElementById('panel-1'), document.getElementById('panel-2'), document.getElementById('panel-3')];
-  var current = 0;
-  var INTERVAL_MS = 20000;
-  var timer = null;
-
-  function show(i){
-    for(var idx=0; idx<panels.length; idx++){
-      if(idx===i){ panels[idx].classList.add('active'); panels[idx].setAttribute('aria-hidden','false'); }
-      else{ panels[idx].classList.remove('active'); panels[idx].setAttribute('aria-hidden','true'); }
-    }
-    current = i;
-  }
-  function next(){ show((current+1)%panels.length); }
-  function startTimer(){ stopTimer(); timer = setInterval(next, INTERVAL_MS); }
-  function stopTimer(){ if(timer){ clearInterval(timer); timer=null; } }
-
-  var wrap = document.getElementById('wrap');
-  wrap.addEventListener('click', next);
-  wrap.addEventListener('touchstart', next, {passive:true});
-  show(0); startTimer();
-  document.addEventListener('visibilitychange', function(){ if(document.hidden) stopTimer(); else startTimer(); });
-
-  // 시간/날짜
-  var clockEl = document.getElementById('clockDisplay');
-  var dateEl = document.getElementById('dateDisplay');
-  var weekdayEl = document.getElementById('weekdayDisplay');
-  var extraEl = document.getElementById('extraDisplay');
+  var dateEl = document.getElementById('date');
+  var milkEl = document.getElementById('milk');
+  var timeEl = document.getElementById('time');
+  var weekdays = ['일','월','화','수','목','금','토'];
 
   function pad(n){ return n<10 ? '0'+n : n; }
-  var weekdays=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
-  function updateClock(){
+
+  function updateDisplay(){
     var now = new Date();
+    var month = now.getMonth()+1;
+    var day = now.getDate();
+    var weekday = weekdays[now.getDay()];
     var hh = now.getHours();
     var mm = pad(now.getMinutes());
-    var ampm = hh>=12 ? 'PM' : 'AM';
-    hh = hh%12; if(hh===0) hh=12;
-    clockEl.textContent = hh+':'+mm+' '+ampm;
-    var month = pad(now.getMonth()+1);
-    var day = pad(now.getDate());
-    dateEl.textContent = month+'/'+day;
-    var weekday = weekdays[now.getDay()];
-    weekdayEl.textContent = weekday;
-    extraEl.textContent = (weekday==='월요일'||weekday==='수요일') ? '우유' : '';
-  }
-  updateClock();
-  setInterval(updateClock,1000);
+    var ampm = hh>=12 ? '오후' : '오전';
+    var hour12 = hh%12; if(hour12===0) hour12=12;
 
-  // 날씨 (아이콘 제거, 텍스트만)
-  var weatherEl = document.getElementById('weatherDisplay');
-  var WEATHER_INTERVAL_MS = 4*60*60*1000;
-  var lastWeather = null;
-  var lastWeatherTime = 0;
+    dateEl.textContent = month+'월'+day+'일('+weekday+')';
 
-  function fetchWeather(){
-    var now = Date.now();
-    if(lastWeather && now - lastWeatherTime < WEATHER_INTERVAL_MS){
-      updateWeatherDisplay(lastWeather);
-      return;
-    }
-    try{
-      var d = new Date();
-      if(d.getHours()>=17) d.setDate(d.getDate()+1);
-      var year=d.getFullYear(), month=d.getMonth()+1, day=d.getDate();
-      var url='https://api.open-meteo.com/v1/forecast?latitude=36.7833&longitude=127.0&daily=temperature_2m_max,temperature_2m_min&timezone=Asia/Seoul';
+    if(weekday==='월' || weekday==='수') milkEl.textContent = '우유';
+    else milkEl.textContent = '';
 
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', url, true);
-      xhr.onreadystatechange = function(){
-        if(xhr.readyState===4 && xhr.status===200){
-          try{
-            var data = JSON.parse(xhr.responseText);
-            var index = -1;
-            for(var i=0;i<data.daily.time.length;i++){
-              if(data.daily.time[i]===year+'-'+pad(month)+'-'+pad(day)){ index=i; break; }
-            }
-            if(index===-1) index=0;
-            lastWeather={
-              tempMax: data.daily.temperature_2m_max[index],
-              tempMin: data.daily.temperature_2m_min[index]
-            };
-            lastWeatherTime = now;
-            updateWeatherDisplay(lastWeather);
-          }catch(e){
-            weatherEl.textContent='날씨 정보를 가져올 수 없습니다.';
-            console.error(e);
-          }
-        }
-      };
-      xhr.send();
-    }catch(e){
-      weatherEl.textContent='날씨 정보를 가져올 수 없습니다.';
-      console.error(e);
-    }
+    timeEl.textContent = ampm+hour12+':'+mm;
   }
 
-  function updateWeatherDisplay(obj){
-    weatherEl.innerHTML = '최고: '+obj.tempMax+'°C<br>최저: '+obj.tempMin+'°C';
-  }
-
-  fetchWeather();
+  updateDisplay();
+  setInterval(updateDisplay,1000);
 })();
 </script>
 </body>
