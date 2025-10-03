@@ -39,14 +39,13 @@ html, body {
   transform:scale(1);
   pointer-events:auto;
 }
-#panel-1 { font-size:80px; font-weight:700; }
-#panel-2 { font-size:60px; font-weight:700; }
-.date-line { font-size:50px; font-weight:600; }
-.weekday { font-size:40px; font-weight:500; margin-top:10px; }
-.extra { font-size:30px; font-weight:400; margin-top:5px; color:#ffcc66; }
-#panel-3 { font-size:40px; }
-.weather-icon { font-size:80px; margin-bottom:10px; }
-.weather { font-size:40px; line-height:1.4; }
+#panel-1 { font-size:150px; font-weight:700; }
+#panel-2 { font-size:120px; font-weight:700; }
+.date-line { font-size:120px; font-weight:600; }
+.weekday { font-size:100px; font-weight:500; margin-top:10px; }
+.extra { font-size:80px; font-weight:400; margin-top:5px; color:#ffcc66; }
+#panel-3 { font-size:100px; line-height:1.4; }
+.weather { font-size:100px; }
 </style>
 </head>
 <body>
@@ -58,7 +57,6 @@ html, body {
     <div class="extra" id="extraDisplay"></div>
   </div>
   <div class="panel" id="panel-3">
-    <div class="weather-icon" id="weatherIcon">☀️</div>
     <div class="weather" id="weatherDisplay">날씨 정보를 불러오는 중...</div>
   </div>
 </div>
@@ -112,13 +110,11 @@ html, body {
   updateClock();
   setInterval(updateClock,1000);
 
-  // 날씨
+  // 날씨 (아이콘 제거, 텍스트만)
   var weatherEl = document.getElementById('weatherDisplay');
-  var iconEl = document.getElementById('weatherIcon');
   var WEATHER_INTERVAL_MS = 4*60*60*1000;
   var lastWeather = null;
   var lastWeatherTime = 0;
-  var weatherCodes = {0:'☀️맑음',1:'🌤구름 조금',2:'⛅️구름 많음',3:'☁️흐림',45:'🌫안개',48:'🌫안개',51:'🌦이슬비',53:'🌦이슬비',55:'🌦이슬비',56:'🌧얼음비',57:'🌧얼음비',61:'🌧비',63:'🌧비',65:'🌧비',66:'❄️진눈깨비',67:'❄️진눈깨비',71:'❄️눈',73:'❄️눈',75:'❄️눈',77:'❄️눈',80:'🌧소나기',81:'🌧소나기',82:'🌧소나기',85:'❄️눈',86:'❄️눈',95:'⛈천둥번개',96:'⛈천둥번개',99:'⛈천둥번개'};
 
   function fetchWeather(){
     var now = Date.now();
@@ -130,7 +126,7 @@ html, body {
       var d = new Date();
       if(d.getHours()>=17) d.setDate(d.getDate()+1);
       var year=d.getFullYear(), month=d.getMonth()+1, day=d.getDate();
-      var url='https://api.open-meteo.com/v1/forecast?latitude=36.7833&longitude=127.0&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia/Seoul';
+      var url='https://api.open-meteo.com/v1/forecast?latitude=36.7833&longitude=127.0&daily=temperature_2m_max,temperature_2m_min&timezone=Asia/Seoul';
 
       var xhr = new XMLHttpRequest();
       xhr.open('GET', url, true);
@@ -144,7 +140,6 @@ html, body {
             }
             if(index===-1) index=0;
             lastWeather={
-              weathercode: data.daily.weathercode[index],
               tempMax: data.daily.temperature_2m_max[index],
               tempMin: data.daily.temperature_2m_min[index]
             };
@@ -152,7 +147,6 @@ html, body {
             updateWeatherDisplay(lastWeather);
           }catch(e){
             weatherEl.textContent='날씨 정보를 가져올 수 없습니다.';
-            iconEl.textContent='❓';
             console.error(e);
           }
         }
@@ -160,16 +154,12 @@ html, body {
       xhr.send();
     }catch(e){
       weatherEl.textContent='날씨 정보를 가져올 수 없습니다.';
-      iconEl.textContent='❓';
       console.error(e);
     }
   }
 
   function updateWeatherDisplay(obj){
-    var code = obj.weathercode;
-    var iconText = weatherCodes[code] || '❓';
-    iconEl.textContent = iconText.substr(0,2);
-    weatherEl.innerHTML = iconText.substr(2)+'<br>최고: '+obj.tempMax+'°C<br>최저: '+obj.tempMin+'°C';
+    weatherEl.innerHTML = '최고: '+obj.tempMax+'°C<br>최저: '+obj.tempMin+'°C';
   }
 
   fetchWeather();
